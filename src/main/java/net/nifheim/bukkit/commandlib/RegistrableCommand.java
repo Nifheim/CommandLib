@@ -5,12 +5,13 @@ import java.util.Arrays;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.plugin.Plugin;
 
 /**
  * @author Beelzebu
  */
-public abstract class RegistrableCommand extends Command {
+public abstract class RegistrableCommand extends Command implements PluginIdentifiableCommand {
 
     private final Plugin plugin;
     private final boolean async;
@@ -27,12 +28,17 @@ public abstract class RegistrableCommand extends Command {
     }
 
     @Override
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
+    @Override
     public boolean execute(CommandSender sender, String commandLabel, String[] args) {
         if (getPermission() == null || sender.hasPermission(getPermission())) {
             if (async && Bukkit.isPrimaryThread()) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> onCommand(sender, args));
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> onCommand(sender, commandLabel, args));
             } else {
-                onCommand(sender, args);
+                onCommand(sender, commandLabel, args);
             }
         } else {
             if (getPermissionMessage() != null) {
@@ -42,5 +48,12 @@ public abstract class RegistrableCommand extends Command {
         return true;
     }
 
-    public abstract void onCommand(CommandSender sender, String[] args);
+    /**
+     * Method called when the command is executed.
+     *
+     * @param sender Who is executing this command.
+     * @param label  /<parameter> being used to execute this command.
+     * @param args   Arguments for this command.
+     */
+    public abstract void onCommand(CommandSender sender, String label, String[] args);
 }
