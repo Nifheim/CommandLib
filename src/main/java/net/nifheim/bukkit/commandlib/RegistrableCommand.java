@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Beelzebu
@@ -28,21 +29,17 @@ public abstract class RegistrableCommand extends Command implements PluginIdenti
     }
 
     @Override
-    public Plugin getPlugin() {
+    public @NotNull Plugin getPlugin() {
         return plugin;
     }
 
     @Override
-    public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, String[] args) {
         if (getPermission() == null || sender.hasPermission(getPermission())) {
             if (async && Bukkit.isPrimaryThread()) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> onCommand(sender, commandLabel, args));
+                Bukkit.getAsyncScheduler().runNow(plugin, _ -> onCommand(sender, commandLabel, args));
             } else {
                 onCommand(sender, commandLabel, args);
-            }
-        } else {
-            if (getPermissionMessage() != null) {
-                sender.sendMessage(getPermissionMessage());
             }
         }
         return true;
